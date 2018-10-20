@@ -18,7 +18,7 @@ class RadarViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         drawCircles(count: randomCirclesCount)
-        addPlanes(count: randomPlanesCount)
+        addSpaceships(count: randomPlanesCount)
     }
 
     func drawCircles(count: Int) {
@@ -29,31 +29,57 @@ class RadarViewController: UIViewController {
             let shapeLayer = CAShapeLayer()
             shapeLayer.path = circlePath.cgPath
             shapeLayer.fillColor = UIColor.clear.cgColor
-            shapeLayer.strokeColor = UIColor.gray.cgColor
+            shapeLayer.strokeColor = UIColor.white.cgColor
             shapeLayer.lineWidth = 1.0
             view.layer.addSublayer(shapeLayer)
             currentRadius += radiusOffset
         }
     }
     
-    func addPlanes(count: Int) {
+    func addSpaceships(count: Int) {
+        
+        // Calculate valid radiuses to place spaceships.
         let planeRadiusOffset = radiusOffset / 2
         var currentOffset = planeRadiusOffset
         var validRadiuses = [CGFloat]()
+        var availableAngles = [CGFloat: [CGFloat]]()
         for _ in 1...randomCirclesCount {
             validRadiuses.append(currentOffset)
+            availableAngles[currentOffset] = [CGFloat]()
             currentOffset += radiusOffset
         }
-        for _ in 1...count {
+        
+        // For each radius calculate available angles and add them to `availableAngles`. The first angle calculates randomly.
+        for radius in validRadiuses {
+            let anglesCount = Int(2 * .pi * radius / ((radiusOffset - 4) * 1.1))
+            let angleStep = CGFloat(2 * .pi / Double(anglesCount))
+            let randomAngle = CGFloat(Double.random(in: 0...(2 * .pi)))
+            for i in 0...anglesCount - 1 {
+                let angle = randomAngle + (angleStep * CGFloat(i))
+                availableAngles[radius]?.append(angle)
+            }
+        }
+        
+        // Add spaceships image views to view. Place spaceship on the available angle and remove angle from the `availableAngles`. If `availableAngles` is empty, place spaceship randomly on that radius.
+        for _ in 0...count - 1 {
             let randomRadius = validRadiuses[Int.random(in: 0...(validRadiuses.count - 1))]
-            let randomAngle = CGFloat(Double.random(in: -3.14...3.14))
+            let randomAngle = availableAngles[randomRadius]!.randomElement() != nil ? availableAngles[randomRadius]!.randomElement()! : CGFloat(Double.random(in: 0...(2 * .pi)))
+            let index = availableAngles[randomRadius]!.firstIndex(of: randomAngle)
+            if !availableAngles[randomRadius]!.isEmpty {
+                availableAngles[randomRadius]?.remove(at: index!)
+            }
             let imageViewSide = radiusOffset - 4
             let point = CGPoint(x: view.center.x - imageViewSide / 2 + cos(randomAngle) * randomRadius, y: view.center.y - imageViewSide / 2 + sin(randomAngle) * randomRadius)
             let imageView = UIImageView(image: UIImage(named: "falcon"))
             view.addSubview(imageView)
-            imageView.frame = CGRect(x: point.x, y: point.y, width: radiusOffset - 4, height: radiusOffset - 4)
+            imageView.frame = CGRect(x: point.x, y: point.y, width: imageViewSide, height: imageViewSide)
         }
     }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+    
+ }
 
-}
 
