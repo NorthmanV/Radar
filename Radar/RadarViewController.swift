@@ -22,6 +22,8 @@ class RadarViewController: UIViewController {
     }
 
     func drawCircles(count: Int) {
+        
+        // Calculate distance between circles and create new circle radius by adding distance to previous circle radius
         radiusOffset = maxRadius / CGFloat(count)
         guard var currentRadius = radiusOffset else { return }
         for _ in 1...count {
@@ -81,5 +83,3 @@ class RadarViewController: UIViewController {
     }
     
  }
-
-
